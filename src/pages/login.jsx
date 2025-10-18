@@ -1,5 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
+import { Link } from 'react-router';
 import { z } from 'zod';
 
 import PasswordInput from '@/components/password-input';
@@ -34,7 +35,7 @@ const loginSchema = z.object({
 });
 
 const LoginPage = () => {
-  const methods = useForm({
+  const form = useForm({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       email: '',
@@ -48,8 +49,8 @@ const LoginPage = () => {
 
   return (
     <div className="flex h-screen w-screen flex-col items-center justify-center gap-3">
-      <Form {...methods}>
-        <form onSubmit={methods.handleSubmit(handleSubmit)}>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(handleSubmit)}>
           <Card className="w-[500px]">
             <CardHeader className="text-center">
               <CardTitle>Entre na sua conta</CardTitle>
@@ -57,7 +58,7 @@ const LoginPage = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <FormField
-                control={methods.control}
+                control={form.control}
                 name="email"
                 render={({ field }) => (
                   <FormItem>
@@ -75,7 +76,7 @@ const LoginPage = () => {
               />
 
               <FormField
-                control={methods.control}
+                control={form.control}
                 name="password"
                 render={({ field }) => (
                   <FormItem>
@@ -94,6 +95,12 @@ const LoginPage = () => {
           </Card>
         </form>
       </Form>
+      <div className="flex items-center justify-center">
+        <p className="text-center opacity-50">Ainda não possui uma conta?</p>
+        <Button variant="link" asChild>
+          <Link to="/signup">Crie agora!</Link>
+        </Button>
+      </div>
     </div>
   );
 };
