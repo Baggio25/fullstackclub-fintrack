@@ -12,6 +12,19 @@ export const AuthContext = createContext({
 
 export const useAuthContext = () => useContext(AuthContext);
 
+const LOCAL_STORAGE_ACCESS_TOKEN_KEY = '@fintrack/accessToken';
+const LOCAL_STORAGE_REFRESH_TOKEN_KEY = '@fintrack/refreshToken';
+
+const setTokens = (tokens) => {
+  localStorage.setItem(LOCAL_STORAGE_ACCESS_TOKEN_KEY, tokens.accessToken);
+  localStorage.setItem(LOCAL_STORAGE_REFRESH_TOKEN_KEY, tokens.refreshToken);
+};
+
+const removeTokens = () => {
+  localStorage.removeItem(LOCAL_STORAGE_ACCESS_TOKEN_KEY);
+  localStorage.removeItem(LOCAL_STORAGE_REFRESH_TOKEN_KEY);
+};
+
 export const AuthContextProvider = ({ children }) => {
   const [user, setUser] = useState();
 
@@ -44,11 +57,8 @@ export const AuthContextProvider = ({ children }) => {
   const signup = (data) => {
     signupMutation.mutate(data, {
       onSuccess: (createdUser) => {
-        const accessToken = createdUser.tokens.accessToken;
-        const refreshToken = createdUser.tokens.refreshToken;
         setUser(createdUser);
-        localStorage.setItem('@fintrack/accessToken', accessToken);
-        localStorage.setItem('@fintrack/refreshToken', refreshToken);
+        setTokens(createdUser.tokens);
 
         toast.success('Conta criada com sucesso.');
       },
@@ -61,12 +71,8 @@ export const AuthContextProvider = ({ children }) => {
   const login = (data) => {
     loginMutation.mutate(data, {
       onSuccess: (loggedUser) => {
-        const accessToken = loggedUser.tokens.accessToken;
-        const refreshToken = loggedUser.tokens.refreshToken;
-
-        localStorage.setItem('@fintrack/accessToken', accessToken);
-        localStorage.setItem('@fintrack/refreshToken', refreshToken);
         setUser(loggedUser);
+        setTokens(loggedUser.tokens);
       },
       onError: (error) => {
         console.error(error);
@@ -77,8 +83,12 @@ export const AuthContextProvider = ({ children }) => {
   useEffect(() => {
     const init = async () => {
       try {
-        const accessToken = localStorage.getItem('@fintrack/accessToken');
-        const refreshToken = localStorage.getItem('@fintrack/refreshToken');
+        const accessToken = localStorage.getItem(
+          LOCAL_STORAGE_ACCESS_TOKEN_KEY
+        );
+        const refreshToken = localStorage.getItem(
+          LOCAL_STORAGE_REFRESH_TOKEN_KEY
+        );
 
         if (!accessToken && !refreshToken) return;
 
@@ -90,8 +100,7 @@ export const AuthContextProvider = ({ children }) => {
 
         setUser(response.data);
       } catch (error) {
-        localStorage.removeItem('@fintrack/accessToken');
-        localStorage.removeItem('@fintrack/refreshToken');
+        removeTokens();
         console.error(error);
       }
     };
@@ -101,8 +110,10 @@ export const AuthContextProvider = ({ children }) => {
 
   useEffect(() => {
     const init = async () => {
-      const accessToken = localStorage.getItem('@fintrack/accessToken');
-      const refreshToken = localStorage.getItem('@fintrack/refreshToken');
+      const accessToken = localStorage.getItem(LOCAL_STORAGE_ACCESS_TOKEN_KEY);
+      const refreshToken = localStorage.getItem(
+        LOCAL_STORAGE_REFRESH_TOKEN_KEY
+      );
 
       if (!accessToken && !refreshToken) return;
 
@@ -114,8 +125,7 @@ export const AuthContextProvider = ({ children }) => {
         });
         setUser(response.data);
       } catch (error) {
-        localStorage.removeItem('@fintrack/accessToken');
-        localStorage.removeItem('@fintrack/refreshToken');
+        removeTokens();
         console.error(error);
       }
     };
