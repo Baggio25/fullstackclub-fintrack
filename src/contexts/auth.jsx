@@ -8,6 +8,7 @@ export const AuthContext = createContext({
   user: null,
   login: () => {},
   signup: () => {},
+  logout: () => {},
   isInitializing: true,
 });
 
@@ -82,6 +83,11 @@ export const AuthContextProvider = ({ children }) => {
     });
   };
 
+  const logout = () => {
+    setUser(null);
+    removeTokens();
+  };
+
   useEffect(() => {
     const init = async () => {
       try {
@@ -121,6 +127,7 @@ export const AuthContextProvider = ({ children }) => {
         isInitializing,
         login,
         signup,
+        logout,
       }}
     >
       {children}
