@@ -27,6 +27,18 @@ export const AuthContextProvider = ({ children }) => {
     },
   });
 
+  const loginMutation = useMutation({
+    mutationKey: ['login'],
+    mutationFn: async (variables) => {
+      const response = await api.post('/users/login', {
+        email: variables.email,
+        password: variables.password,
+      });
+
+      return response.data;
+    },
+  });
+
   const signup = (data) => {
     signupMutation.mutate(data, {
       onSuccess: (createdUser) => {
@@ -40,6 +52,22 @@ export const AuthContextProvider = ({ children }) => {
       },
       onError: () => {
         toast.error('Erro ao criar a conta.');
+      },
+    });
+  };
+
+  const login = (data) => {
+    loginMutation.mutate(data, {
+      onSuccess: (loggedUser) => {
+        const accessToken = loggedUser.tokens.accessToken;
+        const refreshToken = loggedUser.tokens.refreshToken;
+
+        localStorage.setItem('@fintrack/accessToken', accessToken);
+        localStorage.setItem('@fintrack/refreshToken', refreshToken);
+        setUser(loggedUser);
+      },
+      onError: (error) => {
+        console.error(error);
       },
     });
   };
@@ -69,11 +97,35 @@ export const AuthContextProvider = ({ children }) => {
     init();
   }, []);
 
+  useEffect(() => {
+    const init = async () => {
+      const accessToken = localStorage.getItem('@fintrack/accessToken');
+      const refreshToken = localStorage.getItem('@fintrack/refreshToken');
+
+      if (!accessToken && !refreshToken) return;
+
+      try {
+        const response = await api.get('/users/me', {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+        setUser(response.data);
+      } catch (error) {
+        localStorage.removeItem('@fintrack/accessToken');
+        localStorage.removeItem('@fintrack/refreshToken');
+        console.error(error);
+      }
+    };
+
+    init();
+  }, []);
+
   return (
     <AuthContext.Provider
       value={{
         user,
-        login: 'rodrigo.baggio.si',
+        login,
         signup,
       }}
     >

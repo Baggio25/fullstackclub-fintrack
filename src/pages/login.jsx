@@ -1,6 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useContext } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link } from 'react-router';
 import { z } from 'zod';
@@ -24,7 +23,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { api } from '@/lib/axios';
+import { AuthContext } from '@/contexts/auth';
 
 const loginSchema = z.object({
   email: z
@@ -38,18 +37,8 @@ const loginSchema = z.object({
 });
 
 const LoginPage = () => {
-  const [user, setUser] = useState(null);
-  const loginMutation = useMutation({
-    mutationKey: ['login'],
-    mutationFn: async (variables) => {
-      const response = await api.post('/users/login', {
-        email: variables.email,
-        password: variables.password,
-      });
+  const { login, user } = useContext(AuthContext);
 
-      return response.data;
-    },
-  });
   const form = useForm({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -58,45 +47,7 @@ const LoginPage = () => {
     },
   });
 
-  useEffect(() => {
-    const init = async () => {
-      const accessToken = localStorage.getItem('@fintrack/accessToken');
-      const refreshToken = localStorage.getItem('@fintrack/refreshToken');
-
-      if (!accessToken && !refreshToken) return;
-
-      try {
-        const response = await api.get('/users/me', {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
-        setUser(response.data);
-      } catch (error) {
-        localStorage.removeItem('@fintrack/accessToken');
-        localStorage.removeItem('@fintrack/refreshToken');
-        console.error(error);
-      }
-    };
-
-    init();
-  }, []);
-
-  const handleSubmit = (data) => {
-    loginMutation.mutate(data, {
-      onSuccess: (loggedUser) => {
-        const accessToken = loggedUser.tokens.accessToken;
-        const refreshToken = loggedUser.tokens.refreshToken;
-
-        localStorage.setItem('@fintrack/accessToken', accessToken);
-        localStorage.setItem('@fintrack/refreshToken', refreshToken);
-        setUser(loggedUser);
-      },
-      onError: (error) => {
-        console.error(error);
-      },
-    });
-  };
+  const handleSubmit = (data) => login(data);
 
   if (user) {
     return <h1>Olá {user.first_name}</h1>;
