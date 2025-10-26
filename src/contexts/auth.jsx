@@ -8,6 +8,7 @@ export const AuthContext = createContext({
   user: null,
   login: () => {},
   signup: () => {},
+  isInitializing: true,
 });
 
 export const useAuthContext = () => useContext(AuthContext);
@@ -27,6 +28,7 @@ const removeTokens = () => {
 
 export const AuthContextProvider = ({ children }) => {
   const [user, setUser] = useState();
+  const [isInitializing, setIsInitializing] = useState(true);
 
   const signupMutation = useMutation({
     mutationKey: ['signup'],
@@ -83,6 +85,7 @@ export const AuthContextProvider = ({ children }) => {
   useEffect(() => {
     const init = async () => {
       try {
+        setIsInitializing(true);
         const accessToken = localStorage.getItem(
           LOCAL_STORAGE_ACCESS_TOKEN_KEY
         );
@@ -100,33 +103,11 @@ export const AuthContextProvider = ({ children }) => {
 
         setUser(response.data);
       } catch (error) {
+        setUser(null);
         removeTokens();
         console.error(error);
-      }
-    };
-
-    init();
-  }, []);
-
-  useEffect(() => {
-    const init = async () => {
-      const accessToken = localStorage.getItem(LOCAL_STORAGE_ACCESS_TOKEN_KEY);
-      const refreshToken = localStorage.getItem(
-        LOCAL_STORAGE_REFRESH_TOKEN_KEY
-      );
-
-      if (!accessToken && !refreshToken) return;
-
-      try {
-        const response = await api.get('/users/me', {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
-        setUser(response.data);
-      } catch (error) {
-        removeTokens();
-        console.error(error);
+      } finally {
+        setIsInitializing(false);
       }
     };
 
@@ -137,6 +118,7 @@ export const AuthContextProvider = ({ children }) => {
     <AuthContext.Provider
       value={{
         user,
+        isInitializing,
         login,
         signup,
       }}
