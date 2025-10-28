@@ -1,6 +1,15 @@
 import { protectedApi, publicApi } from '@/lib/axios';
 
 export const UserService = {
+  /**
+   * Cria um novo usuário
+   * @param {string} input.firstName
+   * @param {string} input.lastName
+   * @param {string} input.email
+   * @param {string} input.password
+   * @returns {Object} Usuario criado
+   * @returns {string} response.id - Tokens autenticacao
+   */
   signup: async (input) => {
     const response = await publicApi.post('/users', {
       first_name: input.firstName,
@@ -18,6 +27,13 @@ export const UserService = {
     };
   },
 
+  /**
+   * Cria um novo usuário
+   * @param {string} input.email
+   * @param {string} input.password
+   * @returns {Object} Usuario autenticado
+   * @returns {string} response.id - Tokens autenticacao
+   */
   login: async (input) => {
     const response = await publicApi.post('/users/login', {
       email: input.email,
@@ -33,6 +49,10 @@ export const UserService = {
     };
   },
 
+  /**
+   * Retorna os dados de um usuário
+   * @returns {Object} Usuario autenticado
+   */
   me: async () => {
     const response = await protectedApi.get('/users/me');
     return {
